@@ -79,7 +79,7 @@ open class ImageGalleryView: UIView {
     }()
 
   open lazy var selectedStack = ImageStack()
-  open lazy var selectedAsset = PHAsset()
+  var selectedAsset: PHAsset?
   lazy var assets = [PHAsset]()
 
   weak var delegate: ImageGalleryPanGestureDelegate?
@@ -232,8 +232,7 @@ extension ImageGalleryView: UICollectionViewDelegate {
     }
 
     let asset = assets[(indexPath as NSIndexPath).row]
-    self.selectedAsset = asset;
-    AssetManager.resolveAsset(asset, size: CGSize(width: 720, height: 1280), shouldPreferLowRes: configuration.useLowResolutionPreviewImage) { image in
+    AssetManager.resolveAsset(asset, size: CGSize(width: 100, height: 100), shouldPreferLowRes: configuration.useLowResolutionPreviewImage) { image in
       guard image != nil else { return }
 
       if cell.selectedImageView.image != nil {
@@ -245,6 +244,7 @@ extension ImageGalleryView: UICollectionViewDelegate {
         
         if let image = image {
           self.selectedStack.dropImage(image)
+          self.selectedAsset = nil
         }
       } else if self.imageLimit == 0 || self.imageLimit > self.selectedStack.images.count {
         cell.selectedImageView.image = AssetManager.getImage("selectedImageGallery")
@@ -252,8 +252,11 @@ extension ImageGalleryView: UICollectionViewDelegate {
         UIView.animate(withDuration: 0.2, animations: {
           cell.selectedImageView.transform = CGAffineTransform.identity
         })
-        if let image = image {
+        
+        let images: [UIImage] = AssetManager.resolveAssets([asset])
+        if let image = images.first {
           self.selectedStack.pushImage(image)
+          self.selectedAsset = asset
         }
       }
     }
