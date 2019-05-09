@@ -31,7 +31,7 @@ extension ImageGalleryView: UICollectionViewDataSource {
           self.shouldTransform = false
         }
 
-        if self.selectedAsset == asset {
+        if self.selectedAsset.localIdentifier == asset.localIdentifier {
           cell.selectedImageView.image = AssetManager.getImage("selectedImageGallery")
           cell.selectedImageView.alpha = 1
           cell.selectedImageView.transform = CGAffineTransform.identity
