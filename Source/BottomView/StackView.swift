@@ -113,20 +113,20 @@ extension ImageStackView {
     }
 
     if let sender = notification.object as? ImageStack {
-      renderViews(sender.assets)
+      renderViews(sender.images)
       activityView.stopAnimating()
     }
   }
 
   @objc func imageStackDidChangeContent(_ notification: Notification) {
     if let sender = notification.object as? ImageStack {
-      renderViews(sender.assets)
+      renderViews(sender.images)
       activityView.stopAnimating()
     }
   }
 
-  @objc func renderViews(_ assets: [PHAsset]) {
-    if let firstView = views.first, assets.isEmpty {
+  @objc func renderViews(_ images: [UIImage]) {
+    if let firstView = views.first, images.isEmpty {
       views.forEach {
         $0.image = nil
         $0.alpha = 0
@@ -136,13 +136,14 @@ extension ImageStackView {
       return
     }
 
-    let photos = Array(assets.suffix(4))
+    let photos = Array(images.suffix(4))
 
     for (index, view) in views.enumerated() {
       if index <= photos.count - 1 {
-        AssetManager.resolveAsset(photos[index], size: CGSize(width: Dimensions.imageSize, height: Dimensions.imageSize)) { image in
-          view.image = image
-        }
+        view.image = photos[index]
+//        AssetManager.resolveAsset(photos[index], size: CGSize(width: Dimensions.imageSize, height: Dimensions.imageSize)) { image in
+//          view.image = image
+//        }
         view.alpha = 1
       } else {
         view.image = nil

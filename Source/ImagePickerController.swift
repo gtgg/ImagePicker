@@ -160,13 +160,14 @@ open class ImagePickerController: UIViewController {
     initialContentOffset = galleryView.collectionView.contentOffset
 
     applyOrientationTransforms()
+    collapseGalleryView(nil)
 
     UIAccessibilityPostNotification(UIAccessibilityScreenChangedNotification,
                                     bottomContainer);
   }
 
   open func resetAssets() {
-    self.stack.resetAssets([])
+    self.stack.resetImages([])
   }
 
   func checkStatus() {
@@ -275,7 +276,7 @@ open class ImagePickerController: UIViewController {
   @objc func adjustButtonTitle(_ notification: Notification) {
     guard let sender = notification.object as? ImageStack else { return }
 
-    let title = !sender.assets.isEmpty ?
+    let title = !sender.images.isEmpty ?
       configuration.doneButtonTitle : configuration.cancelButtonTitle
     bottomContainer.doneButton.setTitle(title, for: UIControlState())
   }
@@ -295,13 +296,10 @@ open class ImagePickerController: UIViewController {
 
   open func collapseGalleryView(_ completion: (() -> Void)?) {
     galleryView.collectionViewLayout.invalidateLayout()
-    UIView.animate(withDuration: 0.3, animations: {
       self.updateGalleryViewFrames(self.galleryView.topSeparator.frame.height)
       self.galleryView.collectionView.transform = CGAffineTransform.identity
       self.galleryView.collectionView.contentInset = UIEdgeInsets.zero
-      }, completion: { _ in
-        completion?()
-    })
+      completion?()
   }
 
   open func showGalleryView() {
@@ -341,7 +339,7 @@ open class ImagePickerController: UIViewController {
   }
 
   fileprivate func isBelowImageLimit() -> Bool {
-    return (imageLimit == 0 || imageLimit > galleryView.selectedStack.assets.count)
+    return (imageLimit == 0 || imageLimit > galleryView.selectedStack.images.count)
     }
 
   fileprivate func takePicture() {
@@ -371,12 +369,12 @@ extension ImagePickerController: BottomContainerViewDelegate {
   }
 
   func doneButtonDidPress() {
-    var images: [UIImage]
-    if let preferredImageSize = preferredImageSize {
-      images = AssetManager.resolveAssets(stack.assets, size: preferredImageSize)
-    } else {
-      images = AssetManager.resolveAssets(stack.assets)
-    }
+    var images: [UIImage] = stack.images
+//    if let preferredImageSize = preferredImageSize {
+//      images = AssetManager.resolveAssets(stack.assets, size: preferredImageSize)
+//    } else {
+//      images = AssetManager.resolveAssets(stack.assets)
+//    }
 
     delegate?.doneButtonDidPress(self, images: images)
   }
@@ -386,12 +384,12 @@ extension ImagePickerController: BottomContainerViewDelegate {
   }
 
   func imageStackViewDidPress() {
-    var images: [UIImage]
-    if let preferredImageSize = preferredImageSize {
-        images = AssetManager.resolveAssets(stack.assets, size: preferredImageSize)
-    } else {
-        images = AssetManager.resolveAssets(stack.assets)
-    }
+    var images: [UIImage] = stack.images
+//    if let preferredImageSize = preferredImageSize {
+//        images = AssetManager.resolveAssets(stack.assets, size: preferredImageSize)
+//    } else {
+//        images = AssetManager.resolveAssets(stack.assets)
+//    }
 
     delegate?.wrapperDidPress(self, images: images)
   }
@@ -405,17 +403,15 @@ extension ImagePickerController: CameraViewDelegate {
     }
   }
 
-  func imageToLibrary() {
+  func imageToUpdate() {
     guard let collectionSize = galleryView.collectionSize else { return }
-
-    galleryView.fetchPhotos {
-      guard let asset = self.galleryView.assets.first else { return }
-      if self.configuration.allowMultiplePhotoSelection == false {
-        self.stack.assets.removeAll()
-      }
-      self.stack.pushAsset(asset)
+    guard let image = self.cameraController.getLatestPhoto() else { return }
+    if self.configuration.allowMultiplePhotoSelection == false {
+      self.stack.images.removeAll()
     }
-
+    self.stack.pushImage(image)
+    self.doneButtonDidPress()
+    
     galleryView.shouldTransform = true
     bottomContainer.pickerButton.isEnabled = true
 

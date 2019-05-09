@@ -18,6 +18,7 @@ class CameraMan {
   var frontCamera: AVCaptureDeviceInput?
   var stillImageOutput: AVCaptureStillImageOutput?
   var startOnFrontCamera: Bool = false
+  var latestPhoto: UIImage?
 
   deinit {
     stop()
@@ -172,15 +173,19 @@ class CameraMan {
   }
 
   func savePhoto(_ image: UIImage, location: CLLocation?, completion: (() -> Void)? = nil) {
-    PHPhotoLibrary.shared().performChanges({
-      let request = PHAssetChangeRequest.creationRequestForAsset(from: image)
-      request.creationDate = Date()
-      request.location = location
-      }, completionHandler: { (_, _) in
-        DispatchQueue.main.async {
-          completion?()
-        }
-    })
+    DispatchQueue.main.async {
+      self.latestPhoto = image
+      completion?()
+    }
+//    PHPhotoLibrary.shared().performChanges({
+//      let request = PHAssetChangeRequest.creationRequestForAsset(from: image)
+//      request.creationDate = Date()
+//      request.location = location
+//      }, completionHandler: { (_, _) in
+//        DispatchQueue.main.async {
+//          completion?()
+//        }
+//    })
   }
 
   func flash(_ mode: AVCaptureDevice.FlashMode) {
