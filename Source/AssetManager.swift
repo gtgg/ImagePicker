@@ -15,7 +15,7 @@ open class AssetManager {
     return UIImage(named: name, in: bundle, compatibleWith: traitCollection) ?? UIImage()
   }
 
-  open static func fetch(withConfiguration configuration: Configuration, _ completion: @escaping (_ images: [UIImage]) -> Void) {
+  open static func fetch(withConfiguration configuration: Configuration, _ completion: @escaping (_ assets: [PHAsset]) -> Void) {
     guard PHPhotoLibrary.authorizationStatus() == .authorized else { return }
 
     DispatchQueue.global(qos: .background).async {
@@ -29,9 +29,8 @@ open class AssetManager {
           assets.insert(object, at: 0)
         })
 
-        let images = self.resolveAssets(assets)
         DispatchQueue.main.async {
-          completion(images)
+          completion(assets)
         }
       }
     }

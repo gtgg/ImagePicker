@@ -79,7 +79,8 @@ open class ImageGalleryView: UIView {
     }()
 
   open lazy var selectedStack = ImageStack()
-  lazy var images = [UIImage]()
+  open lazy var selectedAsset = PHAsset()
+  lazy var assets = [PHAsset]()
 
   weak var delegate: ImageGalleryPanGestureDelegate?
   var collectionSize: CGSize?
@@ -160,9 +161,9 @@ open class ImageGalleryView: UIView {
   // MARK: - Photos handler
 
   func fetchPhotos(_ completion: (() -> Void)? = nil) {
-    AssetManager.fetch(withConfiguration: configuration) { images in
-      self.images.removeAll()
-      self.images.append(contentsOf: images)
+    AssetManager.fetch(withConfiguration: configuration) { assets in
+      self.assets.removeAll()
+      self.assets.append(contentsOf: assets)
       self.collectionView.reloadData()
 
       completion?()
@@ -229,44 +230,32 @@ extension ImageGalleryView: UICollectionViewDelegate {
         })
       }
     }
-    
-    let image = images[(indexPath as NSIndexPath).row]
-    guard image != nil else { return }
-    if cell.selectedImageView.image != nil {
-      UIView.animate(withDuration: 0.2, animations: {
-        cell.selectedImageView.transform = CGAffineTransform(scaleX: 0.1, y: 0.1)
-      }, completion: { _ in
-        cell.selectedImageView.image = nil
-      })
-      self.selectedStack.dropImage(image)
-    } else if self.imageLimit == 0 || self.imageLimit > self.selectedStack.images.count {
-      cell.selectedImageView.image = AssetManager.getImage("selectedImageGallery")
-      cell.selectedImageView.transform = CGAffineTransform(scaleX: 0, y: 0)
-      UIView.animate(withDuration: 0.2, animations: {
-        cell.selectedImageView.transform = CGAffineTransform.identity
-      })
-      self.selectedStack.pushImage(image)
-    }
 
-//
-//    AssetManager.resolveAsset(asset, size: CGSize(width: 100, height: 100), shouldPreferLowRes: configuration.useLowResolutionPreviewImage) { image in
-//      guard image != nil else { return }
-//
-//      if cell.selectedImageView.image != nil {
-//        UIView.animate(withDuration: 0.2, animations: {
-//          cell.selectedImageView.transform = CGAffineTransform(scaleX: 0.1, y: 0.1)
-//          }, completion: { _ in
-//            cell.selectedImageView.image = nil
-//        })
-//        self.selectedStack.dropAsset(asset)
-//      } else if self.imageLimit == 0 || self.imageLimit > self.selectedStack.assets.count {
-//        cell.selectedImageView.image = AssetManager.getImage("selectedImageGallery")
-//        cell.selectedImageView.transform = CGAffineTransform(scaleX: 0, y: 0)
-//        UIView.animate(withDuration: 0.2, animations: {
-//          cell.selectedImageView.transform = CGAffineTransform.identity
-//        })
-//        self.selectedStack.pushAsset(asset)
-//      }
-//    }
+    let asset = assets[(indexPath as NSIndexPath).row]
+    self.selectedAsset = asset;
+    AssetManager.resolveAsset(asset, size: CGSize(width: 720, height: 1280), shouldPreferLowRes: configuration.useLowResolutionPreviewImage) { image in
+      guard image != nil else { return }
+
+      if cell.selectedImageView.image != nil {
+        UIView.animate(withDuration: 0.2, animations: {
+          cell.selectedImageView.transform = CGAffineTransform(scaleX: 0.1, y: 0.1)
+          }, completion: { _ in
+            cell.selectedImageView.image = nil
+        })
+        
+        if let image = image {
+          self.selectedStack.dropImage(image)
+        }
+      } else if self.imageLimit == 0 || self.imageLimit > self.selectedStack.images.count {
+        cell.selectedImageView.image = AssetManager.getImage("selectedImageGallery")
+        cell.selectedImageView.transform = CGAffineTransform(scaleX: 0, y: 0)
+        UIView.animate(withDuration: 0.2, animations: {
+          cell.selectedImageView.transform = CGAffineTransform.identity
+        })
+        if let image = image {
+          self.selectedStack.pushImage(image)
+        }
+      }
+    }
   }
 }
